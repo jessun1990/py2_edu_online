@@ -138,7 +138,7 @@
         $.ajax({
             cache: false,
             type: "POST",
-            url: "{% url 'org:org_add_fav' %}",
+            url: "{% url 'add_fav' %}",
             data: { 'fav_id': fav_id, 'fav_type': fav_type },
             async: true,
             beforeSend: function (xhr, settings) {

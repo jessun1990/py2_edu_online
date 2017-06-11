@@ -34,7 +34,6 @@ class Organization(models.Model):
     click_nums = models.IntegerField(verbose_name=u'点击数', default=0)
     address = models.CharField(verbose_name=u'机构地址', max_length=100, default="")
     student_nums = models.IntegerField(verbose_name=u'学生人数', default=0)
-    course_nums = models.IntegerField(verbose_name=u'课程数', default=0)
 
     class Meta:
         verbose_name = u'授课机构'
@@ -44,7 +43,13 @@ class Organization(models.Model):
         return self.name
 
     def get_course_nums(self):
-        return self.course_set.count()
+        return self.course_set.all().count()
+
+    def get_teacher_nums(self):
+        return self.teacher_set.all().count()
+
+    def get_classic_courses(self):
+        return self.course_set.all().order_by('-click_nums')[:2]
 
 
 class Teacher(models.Model):
@@ -65,3 +70,15 @@ class Teacher(models.Model):
 
     def __unicode__(self):
         return self.name
+
+    def get_classic_course(self):
+        classic_course = self.course_set.order_by('-click_nums')[:1]
+        return classic_course.get()
+
+    def get_classic_course_add_time(self):
+        classic_course = self.course_set.order_by('-click_nums')[:1]
+        return classic_course.get().add_time
+
+    def get_classic_course_desc(self):
+        classic_course = self.course_set.order_by('-click_nums')[:1]
+        return classic_course.get().desc

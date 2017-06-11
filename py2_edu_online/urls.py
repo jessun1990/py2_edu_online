@@ -21,13 +21,14 @@ import xadmin
 
 from py2_edu_online.settings import MEDIA_ROOT
 from users.views import LoginView, LogoutView, RegisterView, ActiveUserView, ForgetPwdView, ResetPwdView, ModifyPwdView
+from operations.views import AddFavView
 
 urlpatterns = [
     # url(r'^admin/', admin.site.urls),
     url(r'^xadmin/', xadmin.site.urls),
     url(r'^$|^index/', include('global_site.urls')),
 
-    #upload files
+    # Upload files
     url(r'^media/(?P<path>.*)$', serve, {"document_root": MEDIA_ROOT}),
 
     # user
@@ -39,7 +40,12 @@ urlpatterns = [
     url(r'^reset/(?P<reset_code>.*)/$', ResetPwdView.as_view(), name='reset_pwd'),
     url(r'^modify/', ModifyPwdView.as_view(), name='modify_pwd'),
 
-    #org
+    # org
     url(r'^org/', include('organizations.urls', namespace='org')),
 
+    # course
+    url(r'^course/', include('courses.urls', namespace='course')),
+
+    # add_fav
+    url(r'^add_fav/$', AddFavView.as_view(), name='add_fav'),
 ]

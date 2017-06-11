@@ -1,12 +1,14 @@
 # coding: utf-8
 from django.shortcuts import render
-from django .views.generic import View
-from django.http import HttpResponse, JsonResponse
-from pure_pagination import Paginator, EmptyPage, PageNotAnInteger
+from django.views.generic import View
+from django.http import JsonResponse
+from django.db.models import Count
+from pure_pagination import Paginator, PageNotAnInteger
 
 from operations.forms import UserAskForm
 from operations.models import UserFav
 from .models import Organization, CityDict
+from courses.models import Course, Video, Chapter
 # Create your views here.
 
 
@@ -17,6 +19,11 @@ class OrgListView(View):
     def get(self, request):
         all_cities = CityDict.objects.all()
         all_orgs = Organization.objects.all()
+
+        # test
+        # any_org = Organization()
+        # any_org.course_nums = any_org.get_course_nums()
+        # any_org.save()
 
         hot_orgs = Organization.objects.all().order_by('-click_nums')[:3]
 
@@ -36,7 +43,10 @@ class OrgListView(View):
             all_orgs = all_orgs.order_by('-student_nums')
 
         if sort_keyword == 'courses':
-            all_orgs = all_orgs.order_by('-course_nums')
+            # all_orgs = all_orgs.order_by('course_nums')
+            all_orgs = all_orgs.annotate(nums=Count('course')).order_by('-nums')
+
+        all_orgs_nums = all_orgs
 
         # 分页功能
         try:
@@ -49,6 +59,7 @@ class OrgListView(View):
         return render(request, 'org-list.html', {
             'all_cities': all_cities,
             'all_orgs': all_orgs,
+            'all_orgs_nums': all_orgs_nums,
             'city_id': city_id,
             'org_type': org_type,
             'sort_keyword': sort_keyword,
@@ -176,44 +187,3 @@ class OrgHomeTeacherView(View):
             'current_page': current_page,
             'is_fav': is_fav
         })
-
-
-class OrgAddFavView(View):
-    """
-        机构首页 - 收藏机构
-    """
-    def get(self):
-        pass
-
-    def post(self, request):
-        fav_id = request.POST.get('fav_id', 0)
-        fav_type = request.POST.get('fav_type', 0)
-
-        if not request.user.is_authenticated():
-            # 用户未登录
-            return JsonResponse({'status': 'fail', 'msg': u'用户未登录'})
-
-        else:
-            # 用户已经登录
-            try:
-                result_for_check = UserFav.objects.filter(user=request.user, fav_id=int(fav_id), fav_type=int(fav_type))
-
-                if result_for_check:
-                    result_for_check.delete()
-                    return JsonResponse({'status': 'success', 'msg': u'取消收藏'})
-
-                else:
-                    if int(fav_type > 0) and int(fav_id > 0):
-                        new_org_fav = UserFav()
-                        new_org_fav.user = request.user
-                        new_org_fav.fav_type = fav_type
-                        new_org_fav.fav_id = fav_id
-                        new_org_fav.save()
-
-                        return JsonResponse({'status': 'success', 'msg': u'收藏成功'})
-                    else:
-                        return JsonResponse({'status': 'fail', 'msg': u'收藏失败'})
-
-            except Exception as e:
-                return JsonResponse({'status': 'fail', 'msg': u'收藏失败'})
-
